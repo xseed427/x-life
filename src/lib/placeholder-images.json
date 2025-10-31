@@ -1,0 +1,28 @@
+{
+  "placeholderImages": [
+    {
+      "id": "bird",
+      "description": "A European Robin perched on a branch.",
+      "imageUrl": "https://picsum.photos/seed/1/200/200",
+      "imageHint": "bird"
+    },
+    {
+      "id": "flower",
+      "description": "A pink Rosa Rubiginosa flower.",
+      "imageUrl": "https://picsum.photos/seed/2/200/200",
+      "imageHint": "flower"
+    },
+    {
+      "id": "tree",
+      "description": "A large Quercus Robur (Oak Tree).",
+      "imageUrl": "https://picsum.photos/seed/3/200/200",
+      "imageHint": "oak tree"
+    },
+    {
+      "id": "butterfly",
+      "description": "A Monarch butterfly on a leaf.",
+      "imageUrl": "https://picsum.photos/seed/4/200/200",
+      "imageHint": "butterfly"
+    }
+  ]
+}
