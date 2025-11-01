@@ -8,5 +8,4 @@ import '@/ai/flows/diagnose-animal-health.ts';
 import '@/ai/flows/diagnose-animal-health-from-image.ts';
 import '@/ai/flows/diagnose-human-health-from-image.ts';
 import '@/ai/flows/diagnose-plant-health.ts';
-import '@/ai/flows/text-to-speech.ts';
 import '@/ai/flows/identify-medicine.ts';

@@ -93,7 +93,7 @@ export default function IdentificationForm({
 
   const getPlaceholderText = () => {
     if (selectedCategory === 'Human') {
-      return 'Enter your symptoms and explain your health condition for a prescription...';
+      return 'Describe symptoms for a health query, or upload an image of a condition...';
     }
     if (selectedCategory === 'Animal' || selectedCategory === 'Bird' || selectedCategory === 'Fish') {
       return `Ask about a ${selectedCategory.toLowerCase()}'s health, symptoms, or medical condition...`;
@@ -108,7 +108,7 @@ export default function IdentificationForm({
     <div>
       <Form {...form}>
         <form
-          onSubmit={form.handleSubmit((values) => onSubmit(values, selectedCategory === 'Human' ? 'query' : 'identify'))}
+          onSubmit={form.handleSubmit((values) => onSubmit(values, 'identify'))}
           className="flex flex-col"
         >
           {imagePreview ? (
@@ -181,7 +181,7 @@ export default function IdentificationForm({
                 <div className="w-full text-center">
                     <p className="text-sm text-muted-foreground mt-4 inline-block whitespace-nowrap">
                     {selectedCategory === 'Human'
-                        ? 'Upload a picture for diagnosis, or describe symptoms below.'
+                        ? 'Describe symptoms below or upload an image for analysis.'
                         : 'Take a photo or upload an image to know about Health or Species'}
                     </p>
                 </div>
@@ -190,30 +190,19 @@ export default function IdentificationForm({
 
           {imagePreview && !isPending && (
             <div className="flex justify-end gap-4 mt-6">
-              {selectedCategory === 'Human' ? (
-                <>
-                  <Button type="button" size="lg" variant="outline" onClick={() => {
-                      setImagePreview(null);
-                      form.setValue('image', null);
-                      document.getElementById('query-textarea')?.focus();
-                  }}>
-                    Get Prescription
-                  </Button>
-                  <Button type="button" size="lg" onClick={form.handleSubmit((values) => onSubmit(values, 'diagnose'))}>
-                    Diagnose from Image
-                  </Button>
-                </>
-              ) : selectedCategory === 'Medicine' ? (
+              {selectedCategory === 'Medicine' ? (
                 <Button type="button" size="lg" onClick={form.handleSubmit((values) => onSubmit(values, 'identify'))}>
                   Add to Schedule
                 </Button>
               ) : (
                 <>
-                  <Button type="button" size="lg" onClick={form.handleSubmit((values) => onSubmit(values, 'identify'))}>
-                    Identify Species
-                  </Button>
-                  <Button type="button" size="lg" onClick={form.handleSubmit((values) => onSubmit(values, 'diagnose'))}>
-                    Diagnose Health
+                  {selectedCategory !== 'Human' && (
+                    <Button type="button" size="lg" onClick={form.handleSubmit((values) => onSubmit(values, 'identify'))}>
+                      Identify Species
+                    </Button>
+                  )}
+                   <Button type="button" size="lg" onClick={form.handleSubmit((values) => onSubmit(values, 'diagnose'))}>
+                    Diagnose
                   </Button>
                 </>
               )}

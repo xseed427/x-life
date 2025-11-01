@@ -11,13 +11,14 @@ import IdentificationResultDisplay from './identification-result';
 import AnimalDiagnosisResult from './animal-diagnosis-result';
 import IdentificationHistory from './identification-history';
 import { Button } from './ui/button';
-import { RefreshCcw, Stethoscope, Sparkles, PencilLine } from 'lucide-react';
+import { RefreshCcw, Stethoscope, Sparkles } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import type { Identification, IdentificationResult, DiagnosisResult } from '@/lib/types';
 import MedicineScheduler from './medicine-scheduler';
 import FindADoctor from './find-a-doctor';
 import VendorShops from './vendor-shops';
 import DoctorRegistration from './doctor-registration';
+import VitalsMonitor from './vitals-monitor';
 
 const MOCK_HISTORY: Identification[] = [
   {
@@ -66,20 +67,16 @@ const formSchema = z
     path: ['query'],
   });
 
-type PageView = 'form' | 'result' | 'medicine' | 'doctors' | 'shops' | 'doctor-registration';
+type PageView = 'form' | 'result' | 'medicine' | 'doctors' | 'shops' | 'doctor-registration' | 'vitals';
 
 export default function QueryClientPage({ 
   blink, 
   selectedCategory,
   selectedVendor,
-  onImageUpload,
-  onResultGenerated,
 }: { 
   blink: boolean; 
   selectedCategory: string | null; 
   selectedVendor: string | null;
-  onImageUpload: () => void;
-  onResultGenerated: (resultText: string | null) => void;
 }) {
   const [isPending, startTransition] = useTransition();
   const [result, setResult] = useState<{type: string, result: IdentificationResult | DiagnosisResult} | null>(null);
@@ -123,27 +120,13 @@ export default function QueryClientPage({
       setView('shops');
     } else if (selectedCategory === 'Medicine') {
       setView('medicine');
-    } else if (selectedCategory === 'Doctors') {
-      setView('doctors');
+    } else if (selectedCategory === 'Vitals') {
+      setView('vitals');
     } else if (selectedCategory) {
       // Any other category selection should bring us back to the main form
       handleReset();
     }
   }, [selectedCategory, selectedVendor]);
-
-  useEffect(() => {
-    if (result && onResultGenerated) {
-      let resultText: string | null = null;
-      if (result.type === 'identification' && result.result) {
-        resultText = (result.result as IdentificationResult).speciesDescription;
-      } else if (result.type === 'diagnosis' && result.result) {
-        resultText = (result.result as DiagnosisResult).diagnosis;
-      }
-      if(resultText){
-        onResultGenerated(resultText);
-      }
-    }
-  }, [result, onResultGenerated]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -151,9 +134,7 @@ export default function QueryClientPage({
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
-        const dataTransfer = new DataTransfer();
-        dataTransfer.items.add(file);
-        form.setValue('image', dataTransfer.files);
+        form.setValue('image', event.target.files);
       };
       reader.readAsDataURL(file);
       form.setValue('query', '');
@@ -175,25 +156,15 @@ export default function QueryClientPage({
     const imageFile = values.image?.[0];
 
     if (imageFile) {
-        if(typeof imageFile === 'string') {
-            // It's a data URL from camera
-            fetch(imageFile).then(res => res.blob()).then(blob => {
-                const file = new File([blob], "capture.jpg", { type: "image/jpeg" });
-                formData.append('image', file);
-            });
-        } else {
-            formData.append('image', imageFile);
-        }
+        formData.append('image', imageFile);
     } else if (values.query) {
       formData.append('query', values.query);
     } else {
-       if (selectedCategory === 'Human' && action === 'query') {
-         // This is for text-based prescription
-       } else if (selectedCategory !== 'Medicine') {
+       if (action !== 'query') {
           toast({
             variant: 'destructive',
             title: 'Missing Input',
-            description: 'Please provide an image or a query.',
+            description: 'Please provide an image for this action.',
           });
           return;
        }
@@ -210,7 +181,7 @@ export default function QueryClientPage({
     setResult(null);
     setAction(action);
     
-    if (selectedCategory === 'Medicine') {
+    if (selectedCategory === 'Medicine' && action === 'identify') {
       setView('medicine');
     } else {
       setView('result');
@@ -258,18 +229,6 @@ export default function QueryClientPage({
     form.reset({ query: '', image: null, description: '' });
     setView('form');
   };
-  
-  const handleGetPrescription = () => {
-    setResult(null);
-    setImagePreview(null);
-    form.reset({ query: '', image: null, description: '' });
-    setView('form');
-    // We need a slight delay to allow the view to switch back to 'form'
-    // before we can focus the textarea.
-    setTimeout(() => {
-      document.getElementById('query-textarea')?.focus();
-    }, 100);
-  };
 
   const showResults = view === 'result';
   const showIdentificationResult = (isPending && action === 'identify') || (result?.type === 'identification' && !isPending);
@@ -288,8 +247,12 @@ export default function QueryClientPage({
           setImagePreview={setImagePreview}
           blink={blink}
           selectedCategory={selectedCategory}
-          onImageUpload={onImageUpload}
+          onImageUpload={() => {}}
         />
+      )}
+      
+      {view === 'vitals' && (
+          <VitalsMonitor onBack={handleReset} />
       )}
 
       {view === 'medicine' && (
@@ -328,22 +291,16 @@ export default function QueryClientPage({
               <RefreshCcw className="mr-2 h-4 w-4" />
               Start Over
             </Button>
-            {result?.type === 'identification' && imagePreview && !isPending && selectedCategory !== 'Human' && (
+            {result?.type === 'identification' && imagePreview && !isPending && (
                 <Button onClick={handleDiagnoseFromIdentification} size="lg">
                     <Stethoscope className="mr-2 h-4 w-4" />
                     Diagnose Health
                 </Button>
             )}
-            {result?.type === 'diagnosis' && imagePreview && !isPending && selectedCategory !== 'Human' && (
+            {result?.type === 'diagnosis' && imagePreview && !isPending && (
             <Button onClick={handleIdentifyFromDiagnosis} size="lg">
                 <Sparkles className="mr-2 h-4 w-4" />
                 Identify Species
-            </Button>
-            )}
-            {result?.type === 'diagnosis' && !isPending && selectedCategory === 'Human' && (
-            <Button onClick={handleGetPrescription} size="lg">
-                <PencilLine className="mr-2 h-4 w-4" />
-                Get Prescription
             </Button>
             )}
           </div>

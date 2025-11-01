@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Card } from '@/components/ui/card';
-import { Dog, Bird, User, Leaf, Pill, Users, ShoppingCart, Fish } from 'lucide-react';
+import { Dog, Bird, User, Leaf, Pill, Users, ShoppingCart, Fish, HeartPulse } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   DropdownMenu,
@@ -17,6 +17,7 @@ const categories = [
   { name: 'Fish', icon: <Fish className="h-8 w-8" /> },
   { name: 'Human', icon: <User className="h-8 w-8" /> },
   { name: 'Plant', icon: <Leaf className="h-8 w-8" /> },
+  { name: 'Vitals', icon: <HeartPulse className="h-8 w-8" /> },
   { name: 'Medicine', icon: <Pill className="h-8 w-8" /> },
 ];
 

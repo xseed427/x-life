@@ -21,7 +21,6 @@ import {
   DiagnosePlantHealthInput,
 } from '@/ai/flows/diagnose-plant-health';
 import { identifyMedicine, IdentifyMedicineInput } from '@/ai/flows/identify-medicine';
-import { textToSpeech } from '@/ai/flows/text-to-speech';
 import { z } from 'zod';
 
 const imageSchema = z
@@ -33,17 +32,6 @@ const querySchema = z.string().optional();
 
 function toDataURI(buffer: Buffer, mimeType: string): string {
   return `data:${mimeType};base64,${buffer.toString('base64')}`;
-}
-
-export async function getSpeech(text: string) {
-  if (!text || text.trim() === '') return { data: null };
-  try {
-    const result = await textToSpeech(text);
-    return { data: result };
-  } catch (e) {
-    console.error(e);
-    return { error: 'An unexpected error occurred during text to speech.' };
-  }
 }
 
 export async function getMedicineName(formData: FormData) {
@@ -109,12 +97,12 @@ export async function getResult(formData: FormData) {
           const result = await diagnosePlantHealth(input);
           return { data: { type: 'diagnosis', result } };
         } else if (category === 'Human') {
-            const input: DiagnoseHumanHealthFromImageInput = {
-              photoDataUri,
-              description: description || undefined,
-            };
-            const result = await diagnoseHumanHealthFromImage(input);
-            return { data: { type: 'diagnosis', result } };
+          const input: DiagnoseHumanHealthFromImageInput = {
+            photoDataUri,
+            description: description || undefined,
+          };
+          const result = await diagnoseHumanHealthFromImage(input);
+          return { data: { type: 'diagnosis', result } };
         } else {
           // Default to animal diagnosis for Animal, Bird
           const input: DiagnoseAnimalHealthFromImageInput = {
@@ -143,11 +131,6 @@ export async function getResult(formData: FormData) {
       return { error: 'An unexpected error occurred during diagnosis.' };
     }
   }
-
-  if (action === 'identify' && category === 'Human') {
-    return { error: 'Please enter your symptoms in the text box for a prescription query.' };
-  }
-
 
   return { error: 'Please provide an image or a query.' };
 }
