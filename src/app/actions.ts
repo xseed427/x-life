@@ -28,8 +28,6 @@ const imageSchema = z
   .refine((file) => file.size > 0, 'Image is required.')
   .optional();
 
-const querySchema = z.string().optional();
-
 function toDataURI(buffer: Buffer, mimeType: string): string {
   return `data:${mimeType};base64,${buffer.toString('base64')}`;
 }
@@ -56,81 +54,68 @@ export async function getMedicineName(formData: FormData) {
 }
 
 export async function getResult(formData: FormData) {
-  const image = formData.get('image') as File | null;
-  const query = formData.get('query') as string | null;
-  const description = formData.get('description') as string | null;
-  const action = formData.get('action') as 'identify' | 'diagnose' | 'query';
-  const category = formData.get('category') as string | null;
+  try {
+    const image = formData.get('image') as File | null;
+    const query = formData.get('query') as string | null;
+    const description = formData.get('description') as string | null;
+    const action = formData.get('action') as 'identify' | 'diagnose' | 'query';
+    const category = formData.get('category') as string | null;
 
-  if (image && image.size > 0) {
-    const parsedImage = imageSchema.safeParse(image);
-    if (!parsedImage.success) {
-      return { error: 'Invalid image file.' };
-    }
+    // Handle image-based requests
+    if (image && image.size > 0) {
+      const parsedImage = imageSchema.safeParse(image);
+      if (!parsedImage.success) {
+        return { error: 'Invalid image file.' };
+      }
 
-    try {
       const buffer = Buffer.from(await image.arrayBuffer());
       const photoDataUri = toDataURI(buffer, image.type);
 
-      if (action === 'identify' && category !== 'Human') {
+      if (action === 'identify') {
         const input: AnalyzeImageAndIdentifySpeciesInput = {
           photoDataUri,
           description: description || undefined,
         };
         const result = await analyzeImageAndIdentifySpecies(input);
-        if (
-          !result.speciesName ||
-          result.speciesName.toLowerCase().includes('unknown')
-        ) {
-          return {
-            error:
-              "We couldn't identify the species in this photo. Please try a different image.",
-          };
+        if (!result.speciesName || result.speciesName.toLowerCase().includes('unknown')) {
+          return { error: "We couldn't identify the species in this photo. Please try a different image." };
         }
         return { data: { type: 'identification', result } };
-      } else if (action === 'diagnose') {
+      } 
+      
+      if (action === 'diagnose') {
         if (category === 'Plant') {
-          const input: DiagnosePlantHealthInput = {
-            photoDataUri,
-            description: description || undefined,
-          };
+          const input: DiagnosePlantHealthInput = { photoDataUri, description: description || undefined };
           const result = await diagnosePlantHealth(input);
           return { data: { type: 'diagnosis', result } };
-        } else if (category === 'Human') {
-          const input: DiagnoseHumanHealthFromImageInput = {
-            photoDataUri,
-            description: description || undefined,
-          };
+        }
+        if (category === 'Human') {
+          const input: DiagnoseHumanHealthFromImageInput = { photoDataUri, description: description || undefined };
           const result = await diagnoseHumanHealthFromImage(input);
           return { data: { type: 'diagnosis', result } };
-        } else {
-          // Default to animal diagnosis for Animal, Bird
-          const input: DiagnoseAnimalHealthFromImageInput = {
-            photoDataUri,
-            description: description || undefined,
-          };
-          const result = await diagnoseAnimalHealthFromImage(input);
-          return { data: { type: 'diagnosis', result } };
         }
+        // Default to animal diagnosis for Animal, Bird, Fish
+        const input: DiagnoseAnimalHealthFromImageInput = { photoDataUri, description: description || undefined };
+        const result = await diagnoseAnimalHealthFromImage(input);
+        return { data: { type: 'diagnosis', result } };
       }
-    } catch (e) {
-      console.error(e);
-      return { error: 'An unexpected error occurred.' };
     }
-  } else if (query) {
-    const parsedQuery = z.string().min(1).safeParse(query);
-    if (!parsedQuery.success) {
-      return { error: 'Query is required.' };
-    }
-    try {
+
+    // Handle text-based query requests
+    if (query) {
+      const parsedQuery = z.string().min(1).safeParse(query);
+      if (!parsedQuery.success) {
+        return { error: 'Query is required.' };
+      }
       const input: DiagnoseAnimalHealthInput = { query };
       const result = await diagnoseAnimalHealth(input);
       return { data: { type: 'diagnosis', result } };
-    } catch (e) {
-      console.error(e);
-      return { error: 'An unexpected error occurred during diagnosis.' };
     }
-  }
 
-  return { error: 'Please provide an image or a query.' };
+    return { error: 'Please provide an image or a query.' };
+
+  } catch (e: any) {
+    console.error('Error in getResult action:', e);
+    return { error: e.message || 'An unexpected error occurred.' };
+  }
 }
