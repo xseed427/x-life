@@ -1,0 +1,47 @@
+
+export const doctorSpecialties = [
+  "Allergist",
+  "Anesthesiologist",
+  "Cardiologist",
+  "Dermatologist",
+  "Endocrinologist",
+  "Gastroenterologist",
+  "General Physician",
+  "Geriatrician",
+  "Hematologist",
+  "Infectious Disease Specialist",
+  "Internist",
+  "Nephrologist",
+  "Neurologist",
+  "Obstetrician/Gynecologist (OB/GYN)",
+  "Oncologist",
+  "Ophthalmologist",
+  "Orthopedic Surgeon",
+  "Otolaryngologist (ENT)",
+  "Pediatrician",
+  "Physiatrist",
+  "Plastic Surgeon",
+  "Psychiatrist",
+  "Pulmonologist",
+  "Radiologist",
+  "Rheumatologist",
+  "Surgeon",
+  "Urologist"
+];
+
+export const vetSpecialties = [
+    "General Practice",
+    "Small Animal",
+    "Large Animal (Equine/Bovine)",
+    "Exotic Animal",
+    "Surgery",
+    "Internal Medicine",
+    "Oncology",
+    "Cardiology",
+    "Dermatology",
+    "Ophthalmology",
+    "Neurology",
+    "Dentistry",
+    "Behavior",
+    "Emergency & Critical Care"
+];
